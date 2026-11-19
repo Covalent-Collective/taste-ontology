@@ -1,3 +1,11 @@
 .DS_Store
-.obsidian/workspace*
-.obsidian/cache
+.obsidian/
+.trash/
+
+# 영상 작업 결과물 (볼트 안에 두지 마세요 — 별도 영문 폴더에서 작업)
+*.mp4
+*.mov
+*.srt
+*.ass
+*.tsv
+out/
