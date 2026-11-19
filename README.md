@@ -114,6 +114,7 @@ Claude Code·Hermes 같은 도구는 폴더를 읽고 파일까지 만들어 줍
 | [GUIDE](GUIDE.md) | 온톨로지를 만드는 사람 (1~5단계) |
 | [PIPELINE](PIPELINE.md) | 하루 1편을 발행하는 사람 (6~9단계) |
 | [WORKSHOP](WORKSHOP.md) | 모임을 **진행하는** 사람 (90분 · 120분) |
+| [PREP](PREP.md) | 모임 **전에 공지할** 사람 — 설치 안내 복붙용 |
 | [EXAMPLE](EXAMPLE.md) | 채워진 모습이 궁금한 사람 |
 | [`00-START-HERE.md`](00-START-HERE.md) | 볼트를 옵시디언으로 연 사람 |
 
