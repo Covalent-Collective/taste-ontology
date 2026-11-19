@@ -38,7 +38,7 @@ chk "작업 경로에 한글/공백 없음" "printf '%s' \"\$PWD\" | grep -qE '^
 
 echo
 if [ "$ng" -eq 0 ]; then
-  echo "전부 통과. bin/get_subs.sh 로 자막을 받고 bin/make_reel.sh 로 구우면 됩니다."
+  echo "전부 통과. bin/get_video.sh · bin/get_subs.sh 로 받고 bin/make_reel.sh 로 구우면 됩니다."
   exit 0
 fi
 
