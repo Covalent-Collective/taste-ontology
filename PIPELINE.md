@@ -55,19 +55,54 @@ bin/doctor.sh
 [X] 자막 필터(ass) 있음
 ```
 
-ffmpeg 은 깔려 있는데 **자막을 굽는 기능(libass)이 빠진 채로 빌드된** 경우입니다.
-`subtitles=` 와 `drawtext=` 필터가 통째로 없어서 자막을 넣는 모든 명령이
+ffmpeg 은 깔려 있는데 **자막을 굽는 기능(libass)이 없는** 경우입니다.
+`ass` 와 `subtitles` 필터가 통째로 없어서 자막을 넣는 모든 명령이
 `Invalid argument` 로 떨어집니다. 에러가 원인을 알려주지 않기 때문에 에이전트는
 따옴표 문제로 오해하고 몇 번 재시도하다가, 다른 라이브러리를 깔거나 PNG 를 겹치는
 우회로로 새고, 거기서 세션이 무너집니다.
 
+[`bin/make_reel.sh`](bin/make_reel.sh)는 `-vf "...,ass=sub.ass"` 로 자막을 굽습니다.
+**libass 가 없으면 우회로가 없습니다.**
+
+### ⚠️ `brew reinstall ffmpeg` 로는 안 고쳐집니다 (2026-11 확인)
+
+Homebrew 코어의 ffmpeg 포뮬러는 **libass 를 의존성에 포함하지 않습니다.**
+확인하는 법:
+
 ```bash
-brew reinstall ffmpeg                            # 맥
-sudo apt install ffmpeg fonts-noto-cjk           # 우분투
-ffmpeg -filters | grep -E ' ass | subtitles '    # 두 줄 나오면 해결
+brew info ffmpeg | grep -A1 "Required"
+```
+
+`libass` 가 안 보이면 그 ffmpeg 로는 자막을 못 굽습니다. 다시 깔아도 같은 게 옵니다.
+
+**해결: libass 가 기본으로 들어간 탭에서 설치합니다.**
+
+```bash
+brew tap homebrew-ffmpeg/ffmpeg
+```
+
+```bash
+brew unlink ffmpeg && brew install homebrew-ffmpeg/ffmpeg/ffmpeg
+```
+
+> 이 포뮬러는 병에 담긴(bottled) 빌드가 없어서 **소스 컴파일을 합니다 — 30~90분.**
+> 워크샵 당일에 시작하면 늦습니다. **전날 밤에 돌려두세요.**
+> 디스크도 몇 GB 필요합니다.
+
+우분투는 패키지에 libass 가 들어 있어서 그대로 됩니다.
+
+```bash
+sudo apt install ffmpeg fonts-noto-cjk
+```
+
+확인 (두 줄 나오면 해결):
+
+```bash
+ffmpeg -filters | grep -E ' ass | subtitles '
 ```
 
 > **우회하지 마세요.** 자막이 안 들어갈 때 다른 라이브러리를 까는 건 거의 항상 잘못된 길입니다.
+> 유일한 예외가 위의 탭 설치입니다 — 그건 우회가 아니라 **제대로 된 ffmpeg 를 깔는 것**입니다.
 
 ### 작업 폴더는 영문으로
 
