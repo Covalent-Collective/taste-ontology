@@ -32,12 +32,13 @@ chk "ffmpeg 있음"              "[ -x \"$FFMPEG\" ]"
 chk "ffprobe 있음"             "[ -x \"$FFPROBE\" ]"
 chk "자막 필터(ass) 있음"       "\"$FFMPEG\" -hide_banner -filters 2>/dev/null | awk '\$2==\"ass\"{f=1} END{exit !f}'"
 chk "자막 필터(subtitles) 있음" "\"$FFMPEG\" -hide_banner -filters 2>/dev/null | awk '\$2==\"subtitles\"{f=1} END{exit !f}'"
+chk "yt-dlp 있음"              "command -v yt-dlp"
 chk "한글 폰트 있음"            "fc-list 2>/dev/null | grep -qiE 'CJK|Gothic|Pretendard' || ls '/System/Library/Fonts/AppleSDGothicNeo.ttc'"
 chk "작업 경로에 한글/공백 없음" "printf '%s' \"\$PWD\" | grep -qE '^[A-Za-z0-9/._-]+\$'"
 
 echo
 if [ "$ng" -eq 0 ]; then
-  echo "전부 통과. bin/make_reel.sh 를 바로 쓰면 됩니다."
+  echo "전부 통과. bin/get_subs.sh 로 자막을 받고 bin/make_reel.sh 로 구우면 됩니다."
   exit 0
 fi
 
@@ -54,6 +55,12 @@ ffmpeg 없음 / 자막 필터 없음
     확인:    "$FFMPEG" -filters | grep -E ' ass | subtitles '
     ※ 필터가 없는 ffmpeg 은 자막을 못 굽습니다. PNG 를 겹치거나
       moviepy 를 까는 우회로로 가지 마세요. 그게 대부분의 실패 원인입니다.
+
+yt-dlp 없음
+    맥:      brew install yt-dlp
+    우분투:  sudo apt install yt-dlp
+    ※ 유튜브 자막의 진짜 타임코드를 받는 데 씁니다. 이게 없으면 bin/get_subs.sh 가
+      멈추고, 타임코드를 눈대중으로 때우게 됩니다. 그게 자막이 밀리는 원인입니다.
 
 한글 폰트 없음
     맥은 기본 탑재(Apple SD Gothic Neo). 우분투: sudo apt install fonts-noto-cjk

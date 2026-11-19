@@ -27,7 +27,7 @@
 ★ 맥: ffmpeg 에 자막 기능이 빠져 있어서 하나 더 깔아야 합니다. 5~10분.
    터미널(Cmd+Space → "터미널")에 아래를 붙여넣으세요.
 
-   brew install ffmpeg-full
+   brew install ffmpeg-full yt-dlp
 
    ※ 기존 ffmpeg 은 지우지 않아도 됩니다. 같이 두고 씁니다.
    ※ "brew: command not found" 가 나오면 Homebrew 부터:
@@ -35,16 +35,17 @@
 
 ★ 윈도우: WSL2 를 먼저 설치하세요 (재부팅 포함 20~30분).
    관리자 PowerShell 에서:  wsl --install
-   재부팅 후 우분투 창에서:  sudo apt update && sudo apt install ffmpeg fonts-noto-cjk
+   재부팅 후 우분투 창에서:  sudo apt update && sudo apt install ffmpeg fonts-noto-cjk yt-dlp
 
 ★ 공통
    - 디스크 여유 10GB 이상 확보
-   - 인터뷰 영상 1개 준비 (자막/트랜스크립트가 있는 것)
+   - 인터뷰 영상 1개 준비 (유튜브 자막이 있는 것 — 자막 없는 영상은 쓸 수 없습니다)
    - 다 끝나면 아래 한 줄을 붙여넣고, 나온 결과를 캡처해서 보내주세요
 
-   ffmpeg -filters | grep -E ' ass | subtitles '
+   bin/doctor.sh
 
-   두 줄이 나오면 준비 완료입니다. 아무것도 안 나오면 알려주세요.
+   전부 [O] 로 나오면 준비 완료입니다. [X] 가 하나라도 있으면
+   같이 출력되는 "고치는 법"을 그대로 따라 하시고, 그래도 안 되면 알려주세요.
 ```
 
 ---

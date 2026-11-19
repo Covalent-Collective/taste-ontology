@@ -17,6 +17,9 @@
 #   FIT=crop|pad   기본 crop. 좌우를 잘라 꽉 채움. pad 는 위아래 검은 여백.
 #   STYLE=dual|mono  기본 dual. EN 흰색 위 / KR 노랑(#e3df6b) 아래. mono 는 둘 다 흰색.
 #   FONT="..."     기본은 OS별 자동. 예: FONT="Pretendard"
+#   SOURCE="..."   화면 상단에 구울 출처. 예: SOURCE="Ted Chiang · DeMott Lecture 2025"
+#   MARGIN_V=320   자막을 바닥에서 띄우는 px. 기본 320 (인스타 UI 안전영역).
+#                  유튜브 쇼츠만 쓸 거면 200 정도로 낮춰도 됩니다.
 
 set -euo pipefail
 
@@ -78,6 +81,15 @@ WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 ASS="$WORK/sub.ass"
 
+# 자막을 화면 바닥에서 얼마나 띄울지(px). 인스타 릴스·틱톡은 하단 250~320px 를
+# 캡션과 버튼 UI 가 덮습니다. 150 이면 한국어 줄이 거기 걸립니다.
+MARGIN_V="${MARGIN_V:-320}"
+
+# 화면에 구울 출처 한 줄. 상단에 작게 들어갑니다.
+# 수익화하지 않고 원본을 홍보하는 채널에서 출처는 선택이 아니라 조건입니다
+# (PIPELINE.md "이 채널의 입장"). 비워두면 경고만 하고 넘어갑니다.
+SOURCE="${SOURCE:-}"
+
 # ASS 색상은 &HBBGGRR. #e3df6b → &H6BDFE3
 KR_COLOR='&H006BDFE3'
 [ "$STYLE" = "mono" ] && KR_COLOR='&H00FFFFFF'
@@ -92,7 +104,8 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BackColour, Bold, Italic, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Reel,$FONT,54,&H00FFFFFF,&H00000000,&H00000000,0,0,1,3,0,2,60,60,150,1
+Style: Reel,$FONT,54,&H00FFFFFF,&H00000000,&H00000000,0,0,1,3,0,2,60,60,$MARGIN_V,1
+Style: Source,$FONT,32,&H30FFFFFF,&H90000000,&H00000000,0,0,1,2,0,8,50,50,110,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -118,6 +131,17 @@ NF < 4 {
   printf("Dialogue: 0,%s,%s,Reel,,0,0,0,,%s\\N{\\c%s}%s\n", ts($1), ts($2), en, kr, ko)
 }
 ' "$SUBS" >> "$ASS" || die "자막 파일을 읽지 못했습니다."
+
+# 출처 한 줄을 클립 전체에 깐다. ASS 의 { } 는 서식 명령이라 본문에서 지운다.
+if [ -n "$SOURCE" ]; then
+  SRC_TXT=$(printf '%s' "$SOURCE" | tr -d '{}' | tr '\n' ' ')
+  SRC_END=$(awk -v d="$DUR" 'BEGIN{
+    h=int(d/3600); d-=h*3600; m=int(d/60); d-=m*60
+    printf "%d:%02d:%05.2f", h, m, d }')
+  printf 'Dialogue: 0,0:00:00.00,%s,Source,,0,0,0,,%s\n' "$SRC_END" "$SRC_TXT" >> "$ASS"
+else
+  echo "  ⚠ 출처 표기 없음. SOURCE=\"채널 · 제목\" 로 넣으세요 (발행 조건입니다)." >&2
+fi
 
 CUES=$(grep -c '^Dialogue:' "$ASS" || true)
 [ "$CUES" -gt 0 ] || die "자막 큐가 0개입니다. TSV 가 비었거나 탭이 아니라 공백으로 구분됐습니다."
