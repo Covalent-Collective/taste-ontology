@@ -75,19 +75,35 @@ brew info ffmpeg | grep -A1 "Required"
 
 `libass` 가 안 보이면 그 ffmpeg 로는 자막을 못 굽습니다. 다시 깔아도 같은 게 옵니다.
 
-**해결: libass 가 기본으로 들어간 탭에서 설치합니다.**
+**해결: `ffmpeg-full` 을 깔면 됩니다. 한 줄이고, 컴파일이 없습니다.**
 
 ```bash
-brew tap homebrew-ffmpeg/ffmpeg
+brew install ffmpeg-full
 ```
 
-```bash
-brew unlink ffmpeg && brew install homebrew-ffmpeg/ffmpeg/ffmpeg
-```
+`ffmpeg-full` 은 같은 homebrew/core 에 있는 다른 포뮬러로, 의존성 47개에
+**libass · fontconfig · freetype · harfbuzz** 가 전부 들어 있습니다. 병(bottle)이
+제공되므로 몇 분에 끝납니다.
 
-> 이 포뮬러는 병에 담긴(bottled) 빌드가 없어서 **소스 컴파일을 합니다 — 30~90분.**
-> 워크샵 당일에 시작하면 늦습니다. **전날 밤에 돌려두세요.**
-> 디스크도 몇 GB 필요합니다.
+> **keg-only 입니다 — `ffmpeg` 명령으로는 안 잡힙니다.**
+> 설치해도 PATH 의 `ffmpeg` 은 여전히 코어 버전입니다. 그래서 이 저장소의
+> [`bin/doctor.sh`](bin/doctor.sh)와 [`bin/make_reel.sh`](bin/make_reel.sh)는
+> **ass 필터가 있는 ffmpeg 을 알아서 찾아 씁니다.** 직접 지정하려면:
+>
+> ```bash
+> FFMPEG=/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg bin/make_reel.sh ...
+> ```
+
+<details>
+<summary>탭에서 소스 빌드하는 방법 (권하지 않습니다)</summary>
+
+`homebrew-ffmpeg/ffmpeg` 탭의 포뮬러도 libass 를 포함하지만 bottle 이 없어서
+**소스 컴파일 30~90분**이고, **Command Line Tools 가 최신이어야** 합니다.
+낡으면 이렇게 끊깁니다 — `Error: Your Command Line Tools are too outdated.`
+
+또 `brew unlink` 로는 부족해서 `brew uninstall ffmpeg` 을 해야 하고, 그 순간부터
+설치가 끝날 때까지 **ffmpeg 이 아예 없습니다.** 실패하면 `brew install ffmpeg` 로 되돌리세요.
+</details>
 
 우분투는 패키지에 libass 가 들어 있어서 그대로 됩니다.
 

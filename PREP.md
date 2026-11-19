@@ -24,12 +24,12 @@
 ```
 [2회차 준비물 — 설치에 시간이 걸립니다. 전날 밤까지 끝내주세요]
 
-★ 맥: ffmpeg 재설치가 필요합니다. 컴파일이라 30~90분 걸립니다.
-   터미널(Cmd+Space → "터미널")에 아래를 한 줄씩 붙여넣으세요.
+★ 맥: ffmpeg 에 자막 기능이 빠져 있어서 하나 더 깔아야 합니다. 5~10분.
+   터미널(Cmd+Space → "터미널")에 아래를 붙여넣으세요.
 
-   brew uninstall ffmpeg
-   brew install homebrew-ffmpeg/ffmpeg/ffmpeg
+   brew install ffmpeg-full
 
+   ※ 기존 ffmpeg 은 지우지 않아도 됩니다. 같이 두고 씁니다.
    ※ "brew: command not found" 가 나오면 Homebrew 부터:
    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
@@ -58,24 +58,27 @@ Homebrew 코어의 ffmpeg 포뮬러는 **libass(자막 굽기)를 의존성에 �
 brew info ffmpeg | grep -A1 Required     # libass 가 없으면 그 ffmpeg 로는 못 굽습니다
 ```
 
-libass 가 기본으로 들어간 포뮬러는 `homebrew-ffmpeg` 탭에 있는데, **병에 담긴 빌드(bottle)가
-없어서 소스 컴파일**을 합니다. 그래서 30~90분입니다.
+해결은 **`brew install ffmpeg-full`** 입니다. 같은 homebrew/core 의 다른 포뮬러인데
+의존성 47개에 libass·fontconfig·freetype·harfbuzz 가 들어 있고, **병(bottle)이 있어서
+컴파일 없이 몇 분**에 끝납니다. 기존 ffmpeg 을 지울 필요도 없습니다.
 
-### 실제로 걸린 함정 두 개
+단 **keg-only** 라서 `ffmpeg` 명령으로는 안 잡힙니다. 이 저장소의 `bin/` 스크립트들은
+ass 필터가 있는 ffmpeg 을 알아서 찾아 쓰니 참가자는 신경 쓸 게 없습니다.
 
-**① `brew reinstall ffmpeg` 은 해결이 아닙니다.** 같은(libass 없는) 걸 다시 깝니다.
+### 실제로 걸린 함정 세 개 (이 길로 가지 마세요)
 
-**② `brew unlink` 로는 부족합니다.** 탭 설치를 시도하면 이렇게 막힙니다.
+**① `brew reinstall ffmpeg`** — 같은(libass 없는) 걸 다시 깝니다.
 
-```
-Error: ffmpeg was installed from the homebrew/core tap
-but you are trying to install it from the homebrew-ffmpeg/ffmpeg tap.
-```
+**② `brew unlink` 후 탭 설치** — 같은 이름 충돌로 막힙니다.
+`Error: ffmpeg was installed from the homebrew/core tap...`
+`uninstall` 을 해야 하는데, 그 순간부터 설치가 끝날 때까지 **ffmpeg 이 아예 없습니다.**
 
-**`uninstall` 을 해야 합니다.** 그리고 uninstall 한 순간부터 설치가 끝날 때까지는
-`ffmpeg` 명령이 아예 없습니다 — 다른 작업에 ffmpeg 를 쓰는 사람은 그 시간을 피해서 하세요.
+**③ 탭에서 소스 빌드** — 30~90분이고 **Command Line Tools 가 낡으면 아예 실패**합니다.
+`Error: Your Command Line Tools are too outdated.` CLT 업데이트는 관리자 암호가 필요해서
+참가자 안내로는 부적절합니다.
 
-> 되돌리려면 `brew install ffmpeg` 로 코어 버전이 다시 옵니다 (자막은 못 굽는 그 버전).
+> ②를 하다 ffmpeg 이 사라졌으면 `brew install ffmpeg` 로 되돌리고,
+> 그다음 `brew install ffmpeg-full` 로 가세요.
 
 ---
 

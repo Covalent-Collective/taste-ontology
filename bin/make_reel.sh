@@ -23,14 +23,31 @@ set -euo pipefail
 die() { printf '\n[중단] %s\n' "$*" >&2; exit 1; }
 
 # ---------------------------------------------------------------- 0. 사전 점검
-command -v ffmpeg  >/dev/null || die "ffmpeg 이 없습니다.  맥: brew install ffmpeg"
-command -v ffprobe >/dev/null || die "ffprobe 가 없습니다. 맥: brew install ffmpeg"
+# ── ass 필터가 있는 ffmpeg 고르기 ───────────────────────────────────────────
+# Homebrew 코어의 ffmpeg 에는 libass 가 없습니다. libass 가 들어간 ffmpeg-full 은
+# keg-only 라 PATH 에 안 걸리므로, 여기서 직접 찾습니다.
+# 직접 지정하려면:  FFMPEG=/경로/ffmpeg bin/스크립트
+_has_ass() { [ -x "$1" ] && "$1" -hide_banner -filters 2>/dev/null | awk '$2=="ass"{f=1} END{exit !f}'; }
+_pick_ffmpeg() {
+  local c
+  for c in "${FFMPEG:-}" "$(command -v ffmpeg)" \
+           /opt/homebrew/opt/ffmpeg-full/bin/ffmpeg /usr/local/opt/ffmpeg-full/bin/ffmpeg; do
+    [ -n "$c" ] && _has_ass "$c" && { printf '%s' "$c"; return 0; }
+  done
+  printf '%s' "${FFMPEG:-$(command -v ffmpeg)}"
+}
+FFMPEG="$(_pick_ffmpeg)"
+FFPROBE="${FFMPEG%/ffmpeg}/ffprobe"
+[ -x "$FFPROBE" ] || FFPROBE="$(command -v ffprobe)"
+
+[ -x "$FFMPEG" ]  || die "ffmpeg 이 없습니다.  맥: brew install ffmpeg-full"
+[ -x "$FFPROBE" ] || die "ffprobe 가 없습니다. 맥: brew install ffmpeg-full"
 
 # pipefail 때문에 grep -q 로 조기 종료하면 오탐이 난다. awk 하나로 끝낸다.
-if ! ffmpeg -hide_banner -filters 2>/dev/null | awk '$2=="ass"{f=1} END{exit !f}'; then
+if ! "$FFMPEG" -hide_banner -filters 2>/dev/null | awk '$2=="ass"{f=1} END{exit !f}'; then
   die "이 ffmpeg 은 자막을 못 굽습니다 (libass 없이 빌드됨).
-     확인:  ffmpeg -filters | grep -E 'ass|subtitles'
-     해결:  brew reinstall ffmpeg
+     확인:  "$FFMPEG" -filters | grep -E ' ass | subtitles '
+     해결:  brew install ffmpeg-full      (코어 ffmpeg 에는 libass 가 없습니다)
      ※ 여기서 우회하지 마세요. PNG 를 겹치거나 moviepy 를 까는 길로 새면
         더 오래 걸리고 결과도 나쁩니다. ffmpeg 부터 고치는 게 정답입니다."
 fi
@@ -119,7 +136,7 @@ OUT_ABS="$(cd "$(dirname "$OUT")" && pwd)/$(basename "$OUT")"
 echo "→ 자르는 중: ${START}s 부터 ${DUR}s   (자막 ${CUES}개, ${FIT}, ${STYLE}, ${FONT})"
 
 # 필터에 넣는 자막 경로는 따옴표·콜론 문제를 피하려고 항상 작업폴더 안에서 상대경로로 쓴다
-( cd "$WORK" && ffmpeg -hide_banner -loglevel error -stats -y \
+( cd "$WORK" && "$FFMPEG" -hide_banner -loglevel error -stats -y \
     -ss "$START" -i "$SRC_ABS" -t "$DUR" \
     -vf "$GEO,ass=sub.ass" \
     -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p \
@@ -128,8 +145,8 @@ echo "→ 자르는 중: ${START}s 부터 ${DUR}s   (자막 ${CUES}개, ${FIT}, 
     "$OUT_ABS" ) || die "렌더링 실패. 위 에러를 그대로 읽고, 추측으로 다른 도구를 깔지 마세요."
 
 # ------------------------------------------------------------------ 3. 검증
-REAL=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$OUT_ABS")
-SIZE=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "$OUT_ABS")
+REAL=$("$FFPROBE" -v error -show_entries format=duration -of csv=p=0 "$OUT_ABS")
+SIZE=$("$FFPROBE" -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "$OUT_ABS")
 
 echo
 echo "완료: $OUT_ABS"
